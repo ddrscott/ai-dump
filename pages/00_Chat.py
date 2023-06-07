@@ -70,7 +70,7 @@ def submit_text():
                       openai_api_key=os.environ['OPENAI_API_KEY'],
                       streaming=True,
                       callbacks=[MyCallbackHandler(on_new_token=on_new_token)],
-                      temperature=0.7,
+                      temperature=bot_config.get('temperature', 0.7),
                       verbose=True)
 
     tokens.append(f" \n> {st.session_state.human} \n\n")
@@ -79,13 +79,23 @@ def submit_text():
     system_history = bot_config['template'].format(human=st.session_state.human, history='\n'.join(history))
 
     resp = chat([SystemMessage(content=system_history)])
-    logger = logging.getLogger(__name__)
-    logger.info(resp)
     history.append(f'Human: {st.session_state.human}\nYou:{resp.content}')
+    log_chat(system_history, st.session_state.human, resp.content)
     # only keep the last X history items
     st.session_state.history[bot['title']] = history[-HISTORY_CONTEXT_LENGTH:]
     st.session_state.human = ''
 
+def log_chat(context, question, answer):
+    import json
+    from datetime import datetime
+    logger = logging.getLogger('json')
+    logger.info(json.dumps({
+        'timestamp': datetime.now().isoformat(),
+        'bot': bot['base'],
+        'question': question,
+        'answer': answer,
+        'context': context,
+    }))
 
 def render_tokens():
     if tokens:
@@ -95,6 +105,8 @@ def render_tokens():
 
 # st.sidebar.code(bot_config['template'])
 # st.sidebar.code(st.session_state)
+if 'css' in bot_config:
+    st.markdown(bot_config['css'], unsafe_allow_html=True)
 
 # Render previous messages
 output_container = st.empty()

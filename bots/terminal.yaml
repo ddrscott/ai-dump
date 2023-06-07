@@ -25,6 +25,16 @@ template: |
   Assistant:
 
 intro: |
-  ```console
+  ```
   Linux OpenAI 5.4.0-42-generic #46-Ubuntu SMP Fri Jul 10 00:24:02 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
   ```
+
+temperature: 0.0
+
+css: |
+  <style>
+      .css-12syucy {
+        background-color: #474F5F;
+        color: #CACFD8;
+      }
+  </style>
