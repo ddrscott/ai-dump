@@ -2,7 +2,7 @@
 name = "dataturd-dump"
 version = "0.1.0"
 description = ""
-authors = ["Scott Pierce <spierce@spins.com>"]
+authors = ["Scott Pierce <ddrscott@gmail.com>"]
 readme = "README.md"
 packages = [{include = "dataturd", from = "src"}]
 
@@ -10,7 +10,8 @@ packages = [{include = "dataturd", from = "src"}]
 python = "^3.10"
 streamlit = "^1.23.1"
 openai = "^0.27.7"
-langchain = "^0.0.191"
+langchain = "0.0.188"
+pyyaml = "^6.0"
 
 
 [build-system]
