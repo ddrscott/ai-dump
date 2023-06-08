@@ -151,10 +151,11 @@ def winning_move(board, piece):
 
 # Define a function to display the board in ASCII art and in bottom-up order
 def display_board(board):
+    padding = "      "
     print("\n")
-    print("  1   2   3   4   5   6   7   ")
+    print(padding + "  1   2   3   4   5   6   7   ")
     for row in range(board_rows-1, -1, -1):
-        row_str = "|"
+        row_str = padding + "|"
         for col in range(board_cols):
             if board[row][col] == 0:
                 row_str += "   |"
@@ -163,7 +164,7 @@ def display_board(board):
             else:
                 row_str += " O |"
         print(row_str)
-        print("-" * (board_cols*4+1))
+        print(padding + "-" * (board_cols*4+1))
     print("\n")
 
 
@@ -191,7 +192,7 @@ def main():
         else:
             col, minimax_score = minimax(board, 5, -np.Inf, np.Inf, True)
             if is_valid_location(board, col):
-                print("Computer selects column", int(col or 0) + 1)
+                print("Computer selects column:", int(col or 0) + 1)
                 row = get_next_open_row(board, col)
                 drop_piece(board, row, col, 2)
                 if winning_move(board, 2):
