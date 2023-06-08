@@ -33,8 +33,9 @@ if 'bot' not in st.session_state:
     st.session_state.bot = bots[0]
 
 with st.sidebar:
-    selection = st.sidebar.radio("Who do you wanna talk to?", (t for bot in bots for t in [bot['title']]))
-    st.session_state.bot = filter(lambda b: b['title'] == selection, bots).__next__()
+    selection = st.sidebar.radio("Who do you wanna talk to?", (bot['title'] for bot in bots))
+    if selection:
+        st.session_state.bot = filter(lambda b: b['title'] == selection, bots).__next__()
 
 headers = _get_websocket_headers() or {}
 
