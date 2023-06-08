@@ -1,9 +1,10 @@
-import numpy as np
+"""
+Prompt: Help me create Python script to play connect four against a computer ai opponent.
+"""
 
 # Define the game board
 board_rows = 6
 board_cols = 7
-board = np.zeros((board_rows, board_cols))
 
 # Define the evaluation function for the minimax algorithm
 def evaluate_window(window, piece):
@@ -23,20 +24,20 @@ def score_position(board, piece):
     score = 0
 
     # Score center column
-    center_array = [int(i) for i in list(board[:, board_cols//2])]
+    center_array = [board[i][board_cols//2] for i in range(board_rows)]
     center_count = center_array.count(piece)
     score += center_count * 3
 
     # Score horizontal
     for r in range(board_rows):
-        row_array = [int(i) for i in list(board[r,:])]
+        row_array = board[r]
         for c in range(board_cols-3):
             window = row_array[c:c+4]
             score += evaluate_window(window, piece)
 
     # Score vertical
     for c in range(board_cols):
-        col_array = [int(i) for i in list(board[:,c])]
+        col_array = [board[i][c] for i in range(board_rows)]
         for r in range(board_rows-3):
             window = col_array[r:r+4]
             score += evaluate_window(window, piece)
@@ -70,11 +71,11 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         else:
             return (None, score_position(board, 2))
     if maximizing_player:
-        value = -np.Inf
-        column = np.random.choice(valid_locations)
+        value = -float("inf")
+        column = valid_locations[0]
         for col in valid_locations:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
+            b_copy = copy_board(board)
             drop_piece(b_copy, row, col, 2)
             new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
             if new_score > value:
@@ -85,11 +86,11 @@ def minimax(board, depth, alpha, beta, maximizing_player):
                 break
         return column, value
     else:
-        value = np.Inf
-        column = np.random.choice(valid_locations)
+        value = float("inf")
+        column = valid_locations[0]
         for col in valid_locations:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
+            b_copy = copy_board(board)
             drop_piece(b_copy, row, col, 1)
             new_score = minimax(b_copy, depth-1, alpha, beta, True)[1]
             if new_score < value:
@@ -151,9 +152,12 @@ def winning_move(board, piece):
 
 # Define a function to display the board in ASCII art and in bottom-up order
 def display_board(board):
-    padding = "      "
-    print("\n")
-    print(padding + "  1   2   3   4   5   6   7   ")
+    padding = "    "
+    print("")
+    print("", end=padding)
+    for col in range(board_cols):
+        print("  " + str(col+1) + " ", end="")
+    print("")
     for row in range(board_rows-1, -1, -1):
         row_str = padding + "|"
         for col in range(board_cols):
@@ -167,9 +171,13 @@ def display_board(board):
         print(padding + "-" * (board_cols*4+1))
     print("\n")
 
+def copy_board(board):
+    return [row[:] for row in board]
 
 def main():
-# Play the game!
+    board = [[0 for j in range(board_cols)] for i in range(board_rows)]
+
+    # Play the game!
     game_over = False
     turn = 0
 
@@ -190,7 +198,7 @@ def main():
 
         # Player 2 turn
         else:
-            col, minimax_score = minimax(board, 5, -np.Inf, np.Inf, True)
+            col, minimax_score = minimax(board, 5, -float("inf"), float("inf"), True)
             if is_valid_location(board, col):
                 print("Computer selects column:", int(col or 0) + 1)
                 row = get_next_open_row(board, col)
@@ -201,9 +209,21 @@ def main():
             else:
                 print("Invalid selection, please try again.")
                 continue
+
         display_board(board)
         turn += 1
         turn %= 2
+
+        # Check for player 2's winning move
+        if winning_move(board, 2):
+            print("Computer wins!")
+            game_over = True
+
+    play_again = input("Do you want to play again? (y/n): ")
+    if play_again.lower() == "y":
+        main()
+    else:
+        print("Thanks for playing!")
 
 if __name__ == "__main__":
     main()
