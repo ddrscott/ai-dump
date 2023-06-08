@@ -13,17 +13,12 @@ import pandas as pd
 def main():
     df = pd.read_json(open('results.jsonl'), lines=True)
 
-    col1, col2 = st.columns((1, 2))
-
-    # col1.data_editor(data=df, key='results', hide_index=True, use_container_width=True)
-
-    with col1:
-        selection = aggrid_interactive_table(df)
+    selection = aggrid_interactive_table(df)
 
     if selection['selected_rows']:
         row = selection['selected_rows'][0]
 
-        tab1, tab2 = col2.tabs(["Chat", "Json"])
+        tab1, tab2, tab3 = st.tabs(["Chat", "Context", "Json"])
 
         tab1.markdown("""<style>
               .css-12syucy {
@@ -33,10 +28,11 @@ def main():
           </style>""", unsafe_allow_html=True)
         tab1.markdown(f"\n > {row['question']}\n")
         tab1.markdown(row['answer'])
-        tab2.json(selection['selected_rows'][0])
+        tab2.markdown(row['context'])
+        tab3.json(selection['selected_rows'][0])
 
     else:
-        col2.text('No row selected')
+        st.text('No row selected')
 
 
 def aggrid_interactive_table(df: pd.DataFrame):
@@ -62,6 +58,7 @@ def aggrid_interactive_table(df: pd.DataFrame):
         theme="streamlit",
         update_mode=GridUpdateMode.MODEL_CHANGED,
         allow_unsafe_jscode=True,
+        height=400,
     )
 
     return selection

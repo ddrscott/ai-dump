@@ -22,6 +22,7 @@ template: |
   {history}
 
   Human: {human}
+
   You:
 
 intro: |
