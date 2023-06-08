@@ -190,8 +190,8 @@ def main():
         # Player 2 turn
         else:
             col, minimax_score = minimax(board, 5, -np.Inf, np.Inf, True)
-            print("Computer selects column", col)
             if is_valid_location(board, col):
+                print("Computer selects column", int(col or 0) + 1)
                 row = get_next_open_row(board, col)
                 drop_piece(board, row, col, 2)
                 if winning_move(board, 2):
