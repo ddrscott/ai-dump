@@ -11,6 +11,8 @@ from langchain.schema import SystemMessage
 
 import yaml
 
+from dataturd.dump import data
+
 HISTORY_CONTEXT_LENGTH = 10
 
 st.set_page_config(
@@ -90,13 +92,15 @@ def log_chat(context, question, answer):
     import json
     from datetime import datetime
     logger = logging.getLogger('json')
-    logger.info(json.dumps({
+    doc = {
         'timestamp': datetime.now().isoformat(),
         'bot': bot['base'],
         'question': question,
         'answer': answer,
         'context': context,
-    }))
+    }
+    logger.info(json.dumps(doc))
+    data.log_chat(doc)
 
 def render_tokens():
     if tokens:

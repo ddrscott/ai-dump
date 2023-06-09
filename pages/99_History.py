@@ -8,12 +8,17 @@ st.set_page_config(
     page_icon="📖🗑️🔥",
 )
 
+from dataturd.dump import data
 import pandas as pd
 
 def main():
-    df = pd.read_json(open('results.jsonl'), lines=True)
+    recent = data.recent_chats(limit=100)
+    chats = [d['_source'] for d in recent]
+    # df = pd.read_json(open('results.jsonl'), lines=True)
+    df = pd.DataFrame(chats)
 
-    selection = aggrid_interactive_table(df)
+    with st.sidebar:
+        selection = aggrid_interactive_table(df)
 
     if selection['selected_rows']:
         row = selection['selected_rows'][0]
