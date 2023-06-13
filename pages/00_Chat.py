@@ -13,7 +13,7 @@ import yaml
 
 from dataturd.dump import data
 
-HISTORY_CONTEXT_LENGTH = 10
+HISTORY_CONTEXT_LENGTH = 2048
 
 st.set_page_config(
     layout="wide",

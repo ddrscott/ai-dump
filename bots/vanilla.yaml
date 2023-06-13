@@ -1,0 +1,14 @@
+template: |
+  You are a large language model trained by OpenAI.
+  Your name is OpenAI
+
+  {history}
+
+  Human: {human}
+
+  You:
+
+intro: |
+  What can I do for you?
+
+temperature: 0.7
