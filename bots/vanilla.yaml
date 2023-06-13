@@ -1,12 +1,8 @@
-template: |
-  You are a large language model trained by OpenAI.
-  Your name is OpenAI
-
-  {history}
-
-  Human: {human}
-
-  You:
+history:
+  - role: system
+    content: |
+      You are a large language model trained by OpenAI.
+      Your name is OpenAI
 
 intro: |
   What can I do for you?

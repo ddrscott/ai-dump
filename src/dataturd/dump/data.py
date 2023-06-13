@@ -12,7 +12,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Set up Elasticsearch client
 es = Elasticsearch([es_url], basic_auth=(es_user, es_pass), verify_certs=False)
 
-chat_index = 'chats'
+chat_index = 'chats-v3'
 
 def log_chat(doc:dict):
     es.index(index=chat_index, body=doc)

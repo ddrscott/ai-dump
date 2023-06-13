@@ -7,13 +7,20 @@ from streamlit.web.server.websocket_headers import _get_websocket_headers
 
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.schema import SystemMessage
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
 
 import yaml
+import json
 
 from dataturd.dump import data
 
 HISTORY_CONTEXT_LENGTH = 2048
+
+ROLE_TO_CLASS = {
+    'system': SystemMessage,
+    'human': HumanMessage,
+    'ai': AIMessage
+}
 
 st.set_page_config(
     layout="wide",
@@ -22,34 +29,33 @@ st.set_page_config(
 )
 
 bot_path = "bots"
-bots = [
-    {
-        'path': path,
-        'title': os.path.basename(path).split(".")[0].replace("-", " ").title(),
-        'base': os.path.basename(path).split(".")[0]
-    }
-    for path in sorted(glob(f"{bot_path}/*.yaml"))
-]
+
+if 'all_bots' not in st.session_state:
+    st.session_state.all_bots = [
+        {
+            'path': path,
+            'title': os.path.basename(path).split(".")[0].replace("-", " ").title(),
+            'base': os.path.basename(path).split(".")[0],
+            'tokens': [],
+            'history': [],
+            **yaml.safe_load(open(path))
+        }
+        for path in sorted(glob(f"{bot_path}/*.yaml"))
+    ]
+
+all_bots = st.session_state.all_bots
 
 if 'bot' not in st.session_state:
-    st.session_state.bot = bots[0]
+    st.session_state.bot = st.session_state.all_bots[0]
 
 with st.sidebar:
-    selection = st.sidebar.radio("Who do you wanna talk to?", (bot['title'] for bot in bots))
+    selection = st.sidebar.radio("Who do you wanna talk to?", (bot['title'] for bot in all_bots))
     if selection:
-        st.session_state.bot = filter(lambda b: b['title'] == selection, bots).__next__()
+        st.session_state.bot = filter(lambda b: b['title'] == selection, all_bots).__next__()
 
 headers = _get_websocket_headers() or {}
 
 st.subheader(st.session_state.bot['title'])
-
-bot_config = yaml.safe_load(open(st.session_state.bot['path']))
-
-if 'tokens' not in st.session_state:
-    st.session_state.tokens = {bot['title']: [] for bot in bots}
-
-if 'history' not in st.session_state:
-    st.session_state.history = {bot['title']: [] for bot in bots}
 
 class MyCallbackHandler(StreamingStdOutCallbackHandler):
 
@@ -60,9 +66,8 @@ class MyCallbackHandler(StreamingStdOutCallbackHandler):
         self.on_new_token(token)
 
 bot = st.session_state.bot
-tokens = st.session_state.tokens[bot['title']]
-history = st.session_state.history[bot['title']]
-
+tokens = st.session_state.bot['tokens']
+history = st.session_state.bot['history']
 
 def on_new_token(token):
     tokens.append(token)
@@ -73,22 +78,28 @@ def submit_text():
                       openai_api_key=os.environ['OPENAI_API_KEY'],
                       streaming=True,
                       callbacks=[MyCallbackHandler(on_new_token=on_new_token)],
-                      temperature=bot_config.get('temperature', 0.7),
+                      temperature=bot.get('temperature', 0.7),
                       verbose=True)
 
     tokens.append(f" \n> {st.session_state.human} \n\n")
     render_tokens()
 
-    system_history = bot_config['template'].format(human=st.session_state.human, history='\n'.join(history))
+    history.append({'role': 'human', 'content': st.session_state.human})
 
-    resp = chat([SystemMessage(content=system_history)])
-    history.append(f'Human: {st.session_state.human}\nYou:{resp.content}')
-    log_chat(system_history, st.session_state.human, resp.content)
+    messages = [ROLE_TO_CLASS[h['role']](content=h['content']) for h in history]
+    logger = logging.getLogger(__name__)
+    logger.debug(f"History: {messages}")
+    resp = chat(messages)
+
+    log_chat(history, st.session_state.human, resp.content)
+
+    history.append({'role': 'ai', 'content': resp.content})
+
     # only keep the last X history items
-    st.session_state.history[bot['title']] = history[-HISTORY_CONTEXT_LENGTH:]
+    st.session_state.bot['history'] = history[-HISTORY_CONTEXT_LENGTH:]
     st.session_state.human = ''
 
-def log_chat(context, question, answer):
+def log_chat(history, question, answer):
     import json
     from datetime import datetime
     logger = logging.getLogger('json')
@@ -97,21 +108,22 @@ def log_chat(context, question, answer):
         'bot': bot['base'],
         'question': question,
         'answer': answer,
-        'context': context,
+        'history': history,
     }
     logger.info(json.dumps(doc))
+    doc['history'] = json.dumps(doc['history'])
     data.log_chat(doc)
 
 def render_tokens():
     if tokens:
         output_container.markdown(''.join(tokens))
     else:
-        output_container.markdown(bot_config['intro'])
+        output_container.markdown(bot['intro'])
 
-# st.sidebar.code(bot_config['template'])
+# st.sidebar.code(bot['template'])
 # st.sidebar.code(st.session_state)
-if 'css' in bot_config:
-    st.markdown(bot_config['css'], unsafe_allow_html=True)
+if 'css' in bot:
+    st.markdown(bot['css'], unsafe_allow_html=True)
 
 # Render previous messages
 output_container = st.empty()

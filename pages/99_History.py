@@ -10,13 +10,14 @@ st.set_page_config(
 
 from dataturd.dump import data
 import pandas as pd
+import json
 
 def main():
     recent = data.recent_chats(limit=100)
     chats = [d['_source'] for d in recent]
     # df = pd.read_json(open('results.jsonl'), lines=True)
     df = pd.DataFrame(chats)
-
+    df = df.reindex(columns=['question', 'answer', 'timestamp', 'history'])
     with st.sidebar:
         selection = aggrid_interactive_table(df)
 
@@ -33,7 +34,13 @@ def main():
           </style>""", unsafe_allow_html=True)
         tab1.markdown(f"\n > {row['question']}\n")
         tab1.markdown(row['answer'])
-        tab2.markdown(row['context'])
+        for h in json.loads(row['history']):
+            if h['role'] == 'human':
+                tab2.markdown(f" > {h['content']} \n")
+            else:
+                tab2.markdown(f"{h['content']}")
+        tab2.markdown(row['answer'])
+
         tab3.json(selection['selected_rows'][0])
 
     else:
