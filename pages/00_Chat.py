@@ -117,8 +117,10 @@ def log_chat(history, question, answer):
 def render_tokens():
     if tokens:
         output_container.markdown(''.join(tokens))
+        raw_container.code(''.join(tokens))
     else:
         output_container.markdown(bot['intro'])
+        raw_container.code(bot['intro'])
 
 # st.sidebar.code(bot['template'])
 # st.sidebar.code(st.session_state)
@@ -126,7 +128,9 @@ if 'css' in bot:
     st.markdown(bot['css'], unsafe_allow_html=True)
 
 # Render previous messages
-output_container = st.empty()
+tab1, tab2 = st.tabs(["Chat", "Markdown"])
+output_container = tab1.empty()
+raw_container = tab2.empty()
 render_tokens()
 
 # Divider and text input
