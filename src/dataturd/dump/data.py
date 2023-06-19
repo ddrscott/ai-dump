@@ -1,4 +1,5 @@
 import os
+import json
 
 es_url = os.environ.get('ELASTIC_URL', 'localhost')
 es_user = os.environ.get('ELASTIC_USER', 'not_set')
@@ -24,3 +25,11 @@ def recent_chats(limit:int=20):
                     sort=[{"timestamp": {"order": "desc"}}])
     return res['hits']['hits']
 
+
+def row_to_markdown(row):
+    content = [
+            f"\n> {h['content']} \n" if h['role'] == 'human' else f"{h['content']}"
+            for h in json.loads(row['history'])
+    ] + ['\n' + row['answer']]
+
+    return ''.join(content)

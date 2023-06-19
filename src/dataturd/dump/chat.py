@@ -9,9 +9,12 @@ from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.schema import SystemMessage
 
+import yaml
+
 from dataturd.dump import data
 
 HISTORY_CONTEXT_LENGTH = 2048
+
 
 def parse_bots():
     bot_path = "bots"

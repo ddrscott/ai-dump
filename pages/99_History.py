@@ -21,10 +21,15 @@ def main():
     with st.sidebar:
         selection = aggrid_interactive_table(df)
 
+    row = None
     if selection['selected_rows']:
         row = selection['selected_rows'][0]
 
-        tab1, tab2, tab3 = st.tabs(["Chat", "Context", "Json"])
+    elif not df.empty:
+        row = df.iloc[0].to_dict()
+
+    if row:
+        tab1, tab2, tab3 = st.tabs(["Chat", "Markdown", "Json"])
 
         tab1.markdown("""<style>
               .css-12syucy {
@@ -32,19 +37,15 @@ def main():
                 color: #CACFD8;
               }
           </style>""", unsafe_allow_html=True)
-        tab1.markdown(f"\n > {row['question']}\n")
-        tab1.markdown(row['answer'])
-        for h in json.loads(row['history']):
-            if h['role'] == 'human':
-                tab2.markdown(f" > {h['content']} \n")
-            else:
-                tab2.markdown(f"{h['content']}")
-        tab2.markdown(row['answer'])
 
-        tab3.json(selection['selected_rows'][0])
+        content = data.row_to_markdown(row)
 
+        tab1.markdown(''.join(content))
+        tab2.code(''.join(content), language='markdown')
+
+        tab3.json(row)
     else:
-        st.text('No row selected')
+        st.text('No history, yet')
 
 
 def aggrid_interactive_table(df: pd.DataFrame):
@@ -57,11 +58,10 @@ def aggrid_interactive_table(df: pd.DataFrame):
         dict: The selected row
     """
     options = GridOptionsBuilder.from_dataframe(
-        df, enableRowGroup=True, enableValue=True, enablePivot=True
+        df, pre_selected_rows=[1], enableRowGroup=False, enableValue=False, enablePivot=False
     )
 
     options.configure_side_bar()
-
     options.configure_selection("single")
     selection = AgGrid(
         df,
